@@ -22,8 +22,9 @@ def hsv(hue, saturation, brightness):
 def main():
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    fullscreen = False
     pygame.display.set_caption(
-        "MindTunnel Bands | F: FPS | Space: pause | R: colors | S: save"
+        "MindTunnel Bands | F4: fullscreen | F: FPS | Space: pause | R: colors | S: save"
     )
     timer = pygame.time.Clock()
     fps_font = pygame.font.Font(None, 26)
@@ -45,7 +46,7 @@ def main():
         # Begin the timer when the notification is actually presented.
         popup_until = None
 
-    notify("Ready - Space: pause | F: FPS | R: colors | S: save")
+    notify("Ready - F4: fullscreen | F: FPS | Space: pause")
 
     animation_time = 0.0
     palette = 0.0
@@ -73,6 +74,17 @@ def main():
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     running = False
+                elif event.key == pygame.K_F4:
+                    next_fullscreen = not fullscreen
+                    size = (0, 0) if next_fullscreen else (WIDTH, HEIGHT)
+                    flags = pygame.FULLSCREEN if next_fullscreen else 0
+                    try:
+                        screen = pygame.display.set_mode(size, flags)
+                    except pygame.error:
+                        notify("Fullscreen switch unavailable")
+                    else:
+                        fullscreen = next_fullscreen
+                        notify("Fullscreen on" if fullscreen else "Fullscreen off")
                 elif event.key == pygame.K_SPACE:
                     paused = not paused
                     notify("Paused" if paused else "Resumed")
@@ -87,6 +99,9 @@ def main():
 
         if not running:
             break
+
+        view_width, view_height = screen.get_size()
+        view_scale = max(view_width / WIDTH, view_height / HEIGHT)
 
         if not paused:
             frame_count += 1
@@ -106,8 +121,8 @@ def main():
             animation_time += dt * (1.5 if mouse_held else 0.38)
 
             response = 1 - math.exp(-dt * 2.2)
-            target_twist = -3 + 6 * max(0, min(WIDTH, mouse_x)) / WIDTH
-            target_petals = 3 + 7 * max(0, min(HEIGHT, mouse_y)) / HEIGHT
+            target_twist = -3 + 6 * max(0, min(view_width, mouse_x)) / view_width
+            target_petals = 3 + 7 * max(0, min(view_height, mouse_y)) / view_height
 
             twist += (target_twist - twist) * response
             petals += (target_petals - petals) * response
@@ -139,7 +154,7 @@ def main():
         global_rotation = 0.12 * math.sin(t * 0.5)
         cg = math.cos(global_rotation)
         sg = math.sin(global_rotation)
-        center_x, center_y = WIDTH / 2, HEIGHT / 2
+        center_x, center_y = view_width / 2, view_height / 2
 
         # Paint large contours first; smaller contours leave broad colored bands.
         # Exponential spacing makes bands widen toward the viewer.
@@ -148,7 +163,7 @@ def main():
             reverse=True,
         )
         for depth in depths:
-            radius = 8 * 190 ** depth
+            radius = 8 * 190 ** depth * view_scale
             hue = palette + depth * 300 + t * 35
 
             # Keep the bands bright throughout the tunnel.
@@ -185,7 +200,7 @@ def main():
 
             pygame.draw.polygon(screen, color, vertices)
 
-        pygame.draw.circle(screen, (3, 1, 8), (round(center_x), round(center_y)), 5)
+        pygame.draw.circle(screen, (3, 1, 8), (round(center_x), round(center_y)), max(1, round(5 * view_scale)))
 
         if show_fps:
             label = fps_font.render(f"{timer.get_fps():.1f} FPS", True, (255, 255, 255))
