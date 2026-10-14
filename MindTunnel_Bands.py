@@ -29,6 +29,15 @@ def main():
     fps_font = pygame.font.Font(None, 26)
     show_fps = False
 
+    popup_font = pygame.font.Font(None, 30)
+    popup_text = ""
+    popup_until = 0
+
+    def notify(message):
+        nonlocal popup_text, popup_until
+        popup_text = message
+        popup_until = pygame.time.get_ticks() + 1800
+
     animation_time = 0.0
     palette = 0.0
     twist = 1.0
@@ -58,12 +67,16 @@ def main():
                     running = False
                 elif event.key == pygame.K_SPACE:
                     paused = not paused
+                    notify("Paused" if paused else "Resumed")
                 elif event.key == pygame.K_r:
                     palette = random.uniform(0, 360)
+                    notify("Colors randomized")
                 elif event.key == pygame.K_l:
                     light_mode = not light_mode
+                    notify("Light mode on" if light_mode else "Light mode off")
                 elif event.key == pygame.K_f:
                     show_fps = not show_fps
+                    notify("FPS display on" if show_fps else "FPS display off")
                 elif event.key == pygame.K_s:
                     save_requested = True
 
@@ -181,6 +194,19 @@ def main():
             filename = f"MindTunnel-Bands-{stamp}.png"
             pygame.image.save(screen, filename)
             print(f"Saved {filename}")
+            notify("Screenshot saved")
+
+        # Wall-clock expiry keeps popups working while animation is paused.
+        if pygame.time.get_ticks() < popup_until:
+            message = popup_font.render(popup_text, True, (255, 255, 255))
+            text_rect = message.get_rect(center=(WIDTH // 2, HEIGHT - 45))
+            panel_rect = text_rect.inflate(36, 22)
+            panel = pygame.Surface(panel_rect.size, pygame.SRCALPHA)
+            pygame.draw.rect(
+                panel, (12, 12, 20, 225), panel.get_rect(), border_radius=10
+            )
+            screen.blit(panel, panel_rect)
+            screen.blit(message, text_rect)
 
         pygame.display.flip()
 
