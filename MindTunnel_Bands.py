@@ -29,14 +29,23 @@ def main():
     fps_font = pygame.font.Font(None, 26)
     show_fps = False
 
-    popup_font = pygame.font.Font(None, 30)
-    popup_text = ""
-    popup_until = 0
+    popup_font = pygame.font.Font(None, 36)
+    popup_surface = None
+    popup_until = None
 
     def notify(message):
-        nonlocal popup_text, popup_until
-        popup_text = message
-        popup_until = pygame.time.get_ticks() + 1800
+        nonlocal popup_surface, popup_until
+        text = popup_font.render(message, True, (255, 255, 255))
+        popup_surface = pygame.Surface((text.get_width() + 48, text.get_height() + 28))
+        popup_surface.fill((12, 12, 20))
+        pygame.draw.rect(
+            popup_surface, (255, 220, 90), popup_surface.get_rect(), width=2
+        )
+        popup_surface.blit(text, (24, 14))
+        # Begin the timer when the notification is actually presented.
+        popup_until = None
+
+    notify("Ready - Space: pause | F: FPS | R: colors | S: save")
 
     animation_time = 0.0
     palette = 0.0
@@ -191,19 +200,19 @@ def main():
             print(f"Saved {filename}")
             notify("Screenshot saved")
 
-        # Wall-clock expiry keeps popups working while animation is paused.
-        if pygame.time.get_ticks() < popup_until:
-            message = popup_font.render(popup_text, True, (255, 255, 255))
-            text_rect = message.get_rect(center=(WIDTH // 2, HEIGHT - 45))
-            panel_rect = text_rect.inflate(36, 22)
-            panel = pygame.Surface(panel_rect.size, pygame.SRCALPHA)
-            pygame.draw.rect(
-                panel, (12, 12, 20, 225), panel.get_rect(), border_radius=10
+        # Draw last, above the tunnel and FPS counter, even while paused.
+        popup_visible = popup_surface is not None and (
+            popup_until is None or pygame.time.get_ticks() < popup_until
+        )
+        if popup_visible:
+            popup_rect = popup_surface.get_rect(
+                midtop=(screen.get_width() // 2, 55)
             )
-            screen.blit(panel, panel_rect)
-            screen.blit(message, text_rect)
+            screen.blit(popup_surface, popup_rect)
 
         pygame.display.flip()
+        if popup_visible and popup_until is None:
+            popup_until = pygame.time.get_ticks() + 3000
 
     pygame.quit()
 
