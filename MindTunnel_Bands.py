@@ -7,6 +7,7 @@ import pygame
 
 WIDTH, HEIGHT = 900, 675
 TAU = math.tau
+TARGET_FPS = 244
 
 
 def hsv(hue, saturation, brightness):
@@ -33,7 +34,7 @@ def main():
     twist = 1.0
     petals = 6.0
     quality = 0.6
-    average_fps = 60.0
+    average_fps = float(TARGET_FPS)
     frame_count = 0
 
     paused = False
@@ -44,7 +45,7 @@ def main():
     cached_angles = []
 
     while running:
-        elapsed = max(timer.tick(60) / 1000.0, 0.001)
+        elapsed = max(timer.tick(TARGET_FPS) / 1000.0, 0.001)
         dt = min(elapsed, 0.05)
         save_requested = False
 
@@ -72,13 +73,13 @@ def main():
         if not paused:
             frame_count += 1
             average_fps += (
-                min(1.0 / elapsed, 120) - average_fps
+                min(1.0 / elapsed, TARGET_FPS * 2) - average_fps
             ) * 0.04
 
-            if frame_count > 90:
-                if average_fps < 50:
+            if frame_count > TARGET_FPS * 1.5:
+                if average_fps < TARGET_FPS * (50 / 60):
                     quality -= dt * 0.18
-                elif average_fps > 58:
+                elif average_fps > TARGET_FPS * (58 / 60):
                     quality += dt * 0.04
                 quality = max(0.0, min(1.0, quality))
 
