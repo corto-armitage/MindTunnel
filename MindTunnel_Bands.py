@@ -78,8 +78,8 @@ def main():
                 if getattr(event, "flipped", False):
                     wheel_delta = -wheel_delta
                 if wheel_delta:
-                    target_twist = max(-3.0, min(3.0, target_twist + wheel_delta * 0.2))
-                    notify(f"Twist: {target_twist:+.1f}")
+                    target_twist = max(-5 * TAU, min(5 * TAU, target_twist + wheel_delta * 0.2))
+                    notify(f"Twist: {target_twist / TAU:+.2f} tau")
 
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
