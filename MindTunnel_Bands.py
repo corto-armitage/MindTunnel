@@ -24,25 +24,25 @@ def main():
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     fullscreen = False
     pygame.display.set_caption(
-        "MindTunnel Bands | Wheel: twist | Q/E: petals | F4: fullscreen | F: FPS | Space: pause | R: colors | S: save"
+        "MindTunnel Bands | Wheel: twist | Q/E or -/+: petals | F4: fullscreen | F: FPS | Space: pause | R: colors | S: save"
     )
     timer = pygame.time.Clock()
     fps_font = pygame.font.Font(None, 26)
     show_fps = False
 
-    popup_font = pygame.font.Font(None, 36)
+    popup_font = pygame.font.Font(None, 28)
     popup_surface = None
     popup_until = None
 
     def notify(message):
         nonlocal popup_surface, popup_until
         text = popup_font.render(message, True, (255, 255, 255))
-        popup_surface = pygame.Surface((text.get_width() + 48, text.get_height() + 28))
-        popup_surface.fill((12, 12, 20))
-        pygame.draw.rect(
-            popup_surface, (255, 220, 90), popup_surface.get_rect(), width=2
+        popup_surface = pygame.Surface(
+            (text.get_width() + 28, text.get_height() + 16), pygame.SRCALPHA
         )
-        popup_surface.blit(text, (24, 14))
+        # Only the background is translucent; text stays fully readable.
+        popup_surface.fill((0, 0, 0, 102))  # 40% opacity
+        popup_surface.blit(text, (14, 8))
         # Begin the timer when the notification is actually presented.
         popup_until = None
 
@@ -98,8 +98,14 @@ def main():
                 elif event.key == pygame.K_SPACE:
                     paused = not paused
                     notify("Paused" if paused else "Resumed")
-                elif event.key in (pygame.K_q, pygame.K_e):
-                    change = -1 if event.key == pygame.K_q else 1
+                elif event.key in (
+                    pygame.K_q, pygame.K_e, pygame.K_MINUS, pygame.K_EQUALS,
+                    pygame.K_PLUS, pygame.K_KP_MINUS, pygame.K_KP_PLUS,
+                ) or getattr(event, "unicode", "") in ("-", "+"):
+                    decrease = event.key in (
+                        pygame.K_q, pygame.K_MINUS, pygame.K_KP_MINUS
+                    ) or getattr(event, "unicode", "") == "-"
+                    change = -1 if decrease else 1
                     petals = max(3, min(10, petals + change))
                     notify(f"Petals: {petals}")
                 elif event.key == pygame.K_r:
