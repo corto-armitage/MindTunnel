@@ -24,7 +24,7 @@ def main():
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     fullscreen = False
     pygame.display.set_caption(
-        "MindTunnel Bands | F4: fullscreen | F: FPS | Space: pause | R: colors | S: save"
+        "MindTunnel Bands | Wheel: twist | F4: fullscreen | F: FPS | Space: pause | R: colors | S: save"
     )
     timer = pygame.time.Clock()
     fps_font = pygame.font.Font(None, 26)
@@ -46,11 +46,12 @@ def main():
         # Begin the timer when the notification is actually presented.
         popup_until = None
 
-    notify("Ready - F4: fullscreen | F: FPS | Space: pause")
+    notify("Ready - Wheel: twist | F4: fullscreen | F: FPS")
 
     animation_time = 0.0
     palette = 0.0
     twist = 1.0
+    target_twist = twist
     petals = 6.0
     quality = 0.6
     average_fps = float(TARGET_FPS)
@@ -70,6 +71,15 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+
+            elif event.type == pygame.MOUSEWHEEL:
+                # Use fractional deltas for smooth-scrolling mice and touchpads.
+                wheel_delta = getattr(event, "precise_y", event.y)
+                if getattr(event, "flipped", False):
+                    wheel_delta = -wheel_delta
+                if wheel_delta:
+                    target_twist = max(-3.0, min(3.0, target_twist + wheel_delta * 0.2))
+                    notify(f"Twist: {target_twist:+.1f}")
 
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
@@ -116,12 +126,11 @@ def main():
                     quality += dt * 0.04
                 quality = max(0.0, min(1.0, quality))
 
-            mouse_x, mouse_y = pygame.mouse.get_pos()
+            _, mouse_y = pygame.mouse.get_pos()
             mouse_held = any(pygame.mouse.get_pressed())
             animation_time += dt * (1.5 if mouse_held else 0.38)
 
             response = 1 - math.exp(-dt * 2.2)
-            target_twist = -3 + 6 * max(0, min(view_width, mouse_x)) / view_width
             target_petals = 3 + 7 * max(0, min(view_height, mouse_y)) / view_height
 
             twist += (target_twist - twist) * response
