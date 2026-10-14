@@ -24,7 +24,7 @@ def main():
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     fullscreen = False
     pygame.display.set_caption(
-        "MindTunnel Bands | Wheel: twist | F4: fullscreen | F: FPS | Space: pause | R: colors | S: save"
+        "MindTunnel Bands | Wheel: twist | Q/E: petals | F4: fullscreen | F: FPS | Space: pause | R: colors | S: save"
     )
     timer = pygame.time.Clock()
     fps_font = pygame.font.Font(None, 26)
@@ -52,7 +52,7 @@ def main():
     palette = 0.0
     twist = 1.0
     target_twist = twist
-    petals = 6.0
+    petals = 6
     quality = 0.6
     average_fps = float(TARGET_FPS)
     frame_count = 0
@@ -98,6 +98,10 @@ def main():
                 elif event.key == pygame.K_SPACE:
                     paused = not paused
                     notify("Paused" if paused else "Resumed")
+                elif event.key in (pygame.K_q, pygame.K_e):
+                    change = -1 if event.key == pygame.K_q else 1
+                    petals = max(3, min(10, petals + change))
+                    notify(f"Petals: {petals}")
                 elif event.key == pygame.K_r:
                     palette = random.uniform(0, 360)
                     notify("Colors randomized")
@@ -126,19 +130,16 @@ def main():
                     quality += dt * 0.04
                 quality = max(0.0, min(1.0, quality))
 
-            _, mouse_y = pygame.mouse.get_pos()
             mouse_held = any(pygame.mouse.get_pressed())
             animation_time += dt * (1.5 if mouse_held else 0.38)
 
             response = 1 - math.exp(-dt * 2.2)
-            target_petals = 3 + 7 * max(0, min(view_height, mouse_y)) / view_height
 
             twist += (target_twist - twist) * response
-            petals += (target_petals - petals) * response
 
         rings = 32
         points = 16 * round(4 + 3 * quality)
-        petal_count = round(petals)
+        petal_count = petals
 
         # Cache all angle calculations used inside the vertex loop.
         cache_key = (points, petal_count)
