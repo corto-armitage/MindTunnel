@@ -136,8 +136,10 @@ def main():
                     quality += dt * 0.04
                 quality = max(0.0, min(1.0, quality))
 
-            mouse_held = any(pygame.mouse.get_pressed())
-            animation_time += dt * (1.5 if mouse_held else 0.38)
+            left_held, _, right_held = pygame.mouse.get_pressed()
+            # Right-click reverses every time-driven effect; it wins if both are held.
+            time_speed = -1.5 if right_held else (1.5 if left_held else 0.38)
+            animation_time += dt * time_speed
 
             response = 1 - math.exp(-dt * 2.2)
 
