@@ -23,7 +23,7 @@ def main():
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption(
-        "MindTunnel Bands | F: FPS | Space: pause | L: light | R: colors | S: save"
+        "MindTunnel Bands | F: FPS | Space: pause | R: colors | S: save"
     )
     timer = pygame.time.Clock()
     fps_font = pygame.font.Font(None, 26)
@@ -47,7 +47,6 @@ def main():
     frame_count = 0
 
     paused = False
-    light_mode = False
     running = True
 
     cached_key = None
@@ -71,9 +70,6 @@ def main():
                 elif event.key == pygame.K_r:
                     palette = random.uniform(0, 360)
                     notify("Colors randomized")
-                elif event.key == pygame.K_l:
-                    light_mode = not light_mode
-                    notify("Light mode on" if light_mode else "Light mode off")
                 elif event.key == pygame.K_f:
                     show_fps = not show_fps
                     notify("FPS display on" if show_fps else "FPS display off")
@@ -107,9 +103,8 @@ def main():
             twist += (target_twist - twist) * response
             petals += (target_petals - petals) * response
 
-        detail = 0.0 if light_mode else quality
         rings = 32
-        points = 16 * round(4 + 3 * detail)
+        points = 16 * round(4 + 3 * quality)
         petal_count = round(petals)
 
         # Cache all angle calculations used inside the vertex loop.
